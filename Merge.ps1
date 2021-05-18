@@ -1,32 +1,35 @@
-$Path = "C:\Users\rii\Documents\csv\" # путь папки
-$PathTemp = "C:\Users\rii\Documents\csv\temp\" # путь папки с временными файлами
+$Path = "F:\AD-IT\Project\Welle\" # путь папки
+$PathTemp = "F:\AD-IT\Project\Welle\temp\" # путь папки с временными файлами
 $File1 = "Ost_Sklad.csv" # файл выгрузки из 1С
-$File2 = "Signal__Meble.csv" # файл выгрузки из FTP
-$FileType = "*.csv" # все файлы типа csv
+$File2 = "Signal_Meble.csv" # файл выгрузки из FTP
+$List = "list.csv" # файл списка по которому будут удаляться дубляжи
+$ListWrite = "ListWrite.csv" # Промежуточный файл перезаписи
 $Merge = "merge.csv" # временный файл слияния
-$Unic = "SKU" # по какому столбцу проверять на уникальность
-$Fileout = "res1.csv" # Итоговый файл
+$Fileout = "Result.csv" # Итоговый файл
 
-Get-Content $path$file1 | ForEach-Object { $prev = $null } {if ($null -ne $prev) { $prev } $prev = $_} | Set-Content $PathTemp$file1 # удаление последней строки и занесение результата во временную директорию
+# Сохранение в UTF8 и удаление последней строки, добавление во временную директорию +
+Get-Content $Path$File1 | ForEach-Object { $prev = $null } {if ($null -ne $prev) { $prev } $prev = $_} | Out-File $PathTemp$File1 -Encoding UTF8
 
-Copy-Item -Path $Path$File2 -Destination $PathTemp$File2 # копирование во временную директорию
+# Вытянуть шапку из 1 файла и добавить ее в другой, добавить во временную директорию
+[array]$newRow = Get-Content $Path$File1  | Select-Object -Index 0
+$csv = Get-Content $Path$File2 
+$newCSV = $newRow + $csv | Set-Content $PathTemp$File2 -Encoding UTF8
 
+# Создание списка кодов по которому будут удаляться строки во 2 файле
+Import-Csv $PathTemp$File1 -Delimiter ";" -Encoding default | Select-Object SKU | Export-Csv $PathTemp$List -Delimiter ";" -NoTypeInformation -Encoding UTF8
 
-Get-Content $PathTemp$FileType | Add-Content $PathTemp$Merge # слияние
+# Цикл удаления строк с последующей перезаписью из 2 файла
+$result2=Import-Csv -Delimiter ";" -Path $PathTemp$List -Encoding default 
+foreach ($obj2 in $result2)
+{
+    Get-Content -Path $PathTemp$File2 | Where-Object { $_ -notmatch $obj2.SKU} | Set-Content $PathTemp$ListWrite
+    Get-Content -Path $PathTemp$ListWrite | Set-Content $PathTemp$File2
+}
 
-Get-Content $PathTemp$Merge | Sort-Object -Unique $Unic | Add-Content $Path$Fileout # 
+# Удаление шапки из 2 файла 
+Get-Content -Path $PathTemp$File2 | Where-Object { $_ -notmatch "SKU" } | Set-Content $PathTemp$Merge
 
-
-
-Get-Content "C:\Users\rii\Documents\csv\temp\merge.csv" | Sort-Object | get-unique SKU | Add-Content "C:\Users\rii\Documents\csv\res1.csv" 
-
-
-Get-Content "C:\Users\rii\Documents\csv\temp\merge.csv" | Sort-Object -Unique  | Add-Content "C:\Users\rii\Documents\csv\res1.csv"  # слияние
-Get-Content "C:\Users\rii\Documents\csv\temp\merge.csv" -header SKU, Продукцияб Количество| Sort-Object -Unique SKU| Add-Content "C:\Users\rii\Documents\csv\res1.csv"
-#Import-Csv $PathTemp$Merge -Delimiter ";" | sort-Object -Unique $Unic | Export-Csv $Path$Fileout -Delimiter ";" -NoTypeInformation -Encoding UTF8 # сортировака и удаление дубляжей
-
-#Import-Csv "C:\Users\rii\Documents\csv\temp\merge.csv" -Delimiter ";" -header SKU, Name, count| Export-Csv "C:\Users\rii\Documents\csv\res1.csv" -Delimiter ";" -NoTypeInformation -Encoding ANSI
-Import-Csv "C:\Users\rii\Documents\csv\temp\merge.csv" -Delimiter ";" | Sort-Object -Unique SKU| Export-Csv "C:\Users\rii\Documents\csv\res1.csv" -Delimiter ";" -NoTypeInformation
-
-#Remove-Item -Path $PathTemp$FileType -Force # очищение временной папки
-
+# Слияние
+$Files1 = Get-Content $PathTemp$File1
+$Files2 = Get-Content $PathTemp$Merge
+$FileRes = $Files1 + $Files2 | Set-Content $Path$Fileout
