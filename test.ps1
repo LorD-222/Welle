@@ -14,7 +14,7 @@ Get-Content $Path$File1 | ForEach-Object { $prev = $null } {if ($null -ne $prev)
 $csv = Get-Content $Path$File2 
 $newCSV = $newRow + $csv | Add-Content $PathTemp$File2 -Encoding UTF8
 
-# Проверка на уникальность с занесением во временный файл
+<# Проверка на уникальность с занесением во временный файл
 $result=Import-Csv -Delimiter ";" -Path $PathTemp$File1 -Encoding default|?{!$_.value}
 $result1=Import-Csv -Delimiter ";" -Path $PathTemp$File2 -Encoding default|?{!$_.value}
 foreach ($obj1 in $result1)
@@ -27,12 +27,14 @@ foreach ($obj1 in $result1)
         } 
     }
 }
+#>
+
 # убираем полученные дубляжи
 #Import-Csv $PathTemp$Merge -Delimiter ";" | Sort-Object -Unique SKU| Export-Csv $PathTemp$MergeUnic  -Delimiter ";" -NoTypeInformation -Encoding UTF8
 
 
-# слияние
+<# слияние
 $Files1 = Get-Content $PathTemp$File1
 $Files2 = Get-Content $PathTemp$Merge
 $FileRes = $Files1 + $Files2 | Add-Content $Path$Fileout
-
+#>
