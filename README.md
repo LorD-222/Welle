@@ -28,5 +28,5 @@
 git clone https://github.com/LorD-222/Welle
 ~~~
 
-## Спасибо
+## Разработал
 [LorD_222](https://github.com/LorD-222)
