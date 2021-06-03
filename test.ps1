@@ -9,13 +9,17 @@
 #Import-Csv Signal__Meble.csv -Delimiter ";" -Encoding default -Header "SKU", "Name" , "Kolvo" | 
 #Select-Object "SKU", "Name" , "Kolvo" | Export-Csv Signal__Meble1.csv -Delimiter ";" -NoTypeInformation -Encoding UTF8
 
-
-$result1=Import-Csv -Delimiter ";" -Path Signal__Meble1.csv -Encoding default 
+$obj2 = 'ALBIVCSZ'
+$result1=Import-Csv -Delimiter ";" -Path Signal__Meble1.csv -Encoding default #| Select-Object SKU 
+#$result2=Import-Csv -Delimiter ";" -Path Signal__Meble1.csv -Encoding default
 foreach ($obj1 in $result1)
 {
-   Get-Content Ost_Sklad2.csv | Select-Object $obj1.SKU
-   #Get-Content Ost_Sklad2.csv | Where-Object { if ($_.SKU = $obj2.SKU){$obj2}]} #| Set-Content $PathTemp$ListWrite
-   #Get-Content -Path $PathTemp$ListWrite | Set-Content $PathTemp$File2
+   #$obj1
+   if ($obj1.SKU -eq $obj2)
+   {
+      $obj1.Kolvo
+   }
+   
 }
 <#
 $result2=Import-Csv -Delimiter ";" -Path $PathTemp$List -Encoding default 
