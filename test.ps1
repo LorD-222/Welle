@@ -17,6 +17,7 @@ foreach ($obj1 in $result1)
    #$obj1
    if ($obj1.SKU -eq $obj2)
    {
+      Get-Content -Path Ost_Sklad2.csv | Where-Object { $_ -notmatch $obj2.SKU} | Set-Content Ost_Sklad3.csv
       $obj1.Kolvo
    }
    
